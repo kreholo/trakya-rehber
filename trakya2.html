@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trakya Rehberi - Full Versiyon</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+    <style>
+        /* --- GENEL AYARLAR --- */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            color: #334e68;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* --- AÇILIŞ EKRANI --- */
+        #landing-page {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex;
+            z-index: 999;
+        }
+
+        .split-box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            color: white;
+            text-align: center;
+        }
+
+        .split-food { background: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%); }
+        .split-artifact { background: linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%); }
+
+        .split-box:hover { flex: 1.3; }
+        .split-box h1 { font-size: 3rem; font-weight: 700; text-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+
+        /* --- ŞEHİR SEÇİMİ --- */
+        #city-page {
+            display: none;
+            height: 100vh;
+            background: #eef2f5;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .city-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-width: 1000px;
+            width: 90%;
+        }
+
+        .city-card {
+            background: white;
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            transition: 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .city-card:hover {
+            transform: translateY(-10px);
+            border-color: #2193b0;
+            color: #2193b0;
+        }
+
+        /* --- İÇERİK SAYFALARI --- */
+        .content-page { display: none; min-height: 100vh; padding-bottom: 60px; }
+
+        /* Sticky Nav (Yatay Kaydırılabilir) */
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            padding: 15px 0;
+        }
+
+        .nav-scroller {
+            overflow-x: auto;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch; /* Mobil kaydırma için */
+            padding-bottom: 5px; /* Scrollbar gizlemek için pay */
+        }
+        
+        /* Scrollbar'ı gizle */
+        .nav-scroller::-webkit-scrollbar { display: none; }
+
+        .nav-pills .nav-link {
+            color: #486581;
+            margin: 0 3px;
+            border-radius: 50px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            display: inline-block;
+        }
+        .nav-pills .nav-link.active { background-color: #2193b0; color: white; }
+
+        /* Kart Tasarımı */
+        .item-card {
+            border: none;
+            border-radius: 16px;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+
+        .card-img-wrapper { height: 200px; }
+        @media(min-width: 768px) { .card-img-wrapper { height: 100%; min-height: 250px; } }
+        
+        .card-img-fit { width: 100%; height: 100%; object-fit: cover; }
+
+        .category-title {
+            color: #102a43;
+            border-bottom: 2px solid #2193b0;
+            display: inline-block;
+            padding-bottom: 5px;
+            margin: 40px 0 20px 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        /* Bilgi Kutuları (Yazı Alanı) */
+        .info-box {
+            background-color: #f8fbff;
+            border: 1px solid #e1e8ed;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        .info-title { font-weight: bold; color: #2193b0; margin-bottom: 5px; display: block;}
+
+        @media(max-width: 768px) { .city-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <div id="landing-page">
+        <div class="split-box split-food" onclick="selectMode('food')">
+            <i class="bi bi-egg-fried" style="font-size: 4rem; margin-bottom: 1rem;"></i>
+            <h1>YEMEKLER</h1>
+        </div>
+        <div class="split-box split-artifact" onclick="selectMode('artifact')">
+            <i class="bi bi-bank" style="font-size: 4rem; margin-bottom: 1rem;"></i>
+            <h1>ESERLER</h1>
+        </div>
+    </div>
+
+    <div id="city-page">
+        <h2 class="mb-5">Şehir Seçiniz</h2>
+        <div class="city-grid">
+            <div class="city-card" onclick="loadContent('Edirne')">EDİRNE</div>
+            <div class="city-card" onclick="loadContent('Tekirdağ')">TEKİRDAĞ</div>
+            <div class="city-card" onclick="loadContent('Kırklareli')">KIRKLARELİ</div>
+        </div>
+        <button class="btn btn-link mt-4 text-muted" onclick="location.reload()">Geri Dön</button>
+    </div>
+
+    <div id="food-section" class="content-page">
+        <div class="sticky-header">
+            <div class="container">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="m-0 fw-bold text-primary"><span class="city-title"></span> Mutfağı</h5>
+                    <button class="btn btn-sm btn-outline-danger rounded-pill" onclick="location.reload()">Çıkış</button>
+                </div>
+                <div class="nav-scroller">
+                    <div class="nav nav-pills">
+                        <a class="nav-link active" href="#cat-corba">Çorbalar</a>
+                        <a class="nav-link" href="#cat-ana">Ana Yemek</a>
+                        <a class="nav-link" href="#cat-ara">Ara Sıcak</a>
+                        <a class="nav-link" href="#cat-yan">Yancılar</a>
+                        <a class="nav-link" href="#cat-tatli">Tatlılar</a>
+                        <a class="nav-link" href="#cat-icecek">İçecekler</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container mt-2" id="food-container">
+            <div id="cat-corba"></div>
+            <div id="cat-ana"></div>
+            <div id="cat-ara"></div>
+            <div id="cat-yan"></div>
+            <div id="cat-tatli"></div>
+            <div id="cat-icecek"></div>
+        </div>
+    </div>
+
+    <div id="artifact-section" class="content-page">
+        <div class="sticky-header">
+            <div class="container d-flex justify-content-between align-items-center">
+                <h5 class="m-0 fw-bold text-primary">Tarihi <span class="city-title"></span> Eserleri</h5>
+                <button class="btn btn-sm btn-outline-danger rounded-pill" onclick="location.reload()">Çıkış</button>
+            </div>
+        </div>
+        <div class="container mt-4" id="artifact-container">
+            </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        // --- VERİ TABANI (Buraya her şehir için verileri ekliyoruz) ---
+        const database = {
+            'Edirne': {
+                food: {
+                    corba: [
+                        { name: "Düğün Çorbası", img: "https://cdn.yemek.com/mnresize/1250/833/uploads/2021/03/dugun-corbasi-yemekcom.jpg", desc: "Yoğurtlu terbiyeli kuzu eti çorbası.", recipe: "Etler haşlanır, yoğurt ve yumurta ile terbiye yapılır...", place: "Tarihi çarşı içindeki çorbacılarda bulunur." },
+                        { name: "Gerdan Çorbası", img: "https://i.lezzet.com.tr/images-xxlarge-recipe/gerdan-corbasi-b6e83889-4089-4d6d-b847-f495536554b5.jpg", desc: "Kuzu gerdan etiyle yapılan şifalı çorba.", recipe: "Gerdan eti lif lif ayrılır...", place: "Sabah erken saatlerde merkez lokantalarında." },
+                        { name: "Rumeli Paçası", img: "https://cdn.yemek.com/mnresize/940/940/uploads/2015/04/terbiyeli-kelle-paca-corbasi-tarifi.jpg", desc: "Sarımsaklı sirkeli özel paça.", recipe: "Bol sarımsak ve sirke ile servis edilir.", place: "Paçacı Şaban Usta vb." }
+                    ],
+                    ana: [
+                        { name: "Tava Ciğer", img: "https://upload.wikimedia.org/wikipedia/commons/2/2f/Edirne_ci%C4%9Feri.jpg", desc: "Edirne'nin markası, yaprak ciğer.", recipe: "Ciğerin zarı soyulur, ince doğranır, özel unla kızartılır.", place: "Ciğerci Niyazi, Aydın Usta." },
+                        { name: "Elbasan Tava", img: "https://i.lezzet.com.tr/images-xxlarge-recipe/elbasan_tava-3a059080-33b0-4660-9118-2e0f40d7c71f.jpg", desc: "Yoğurtlu soslu kuzu eti.", recipe: "Fırında beşamel benzeri sosla pişer.", place: "Geleneksel lokantalar." },
+                        { name: "Edirne Köftesi", img: "https://im.haberturk.com/2020/10/16/ver1602844855/2837659_810x458.jpg", desc: "Tava ciğer alternatifidir.", recipe: "Dana ve kuzu kıyma karışımı.", place: "Köfteci Osman." }
+                    ],
+                    ara: [
+                        { name: "Ciğer Sarma", img: "https://i.nefisyemektarifleri.com/2018/02/16/ciger-sarma.jpg", desc: "Kuzu gömleğine sarılı iç pilav.", recipe: "İç pilav hazırlanır, gömleğe sarılıp fırınlanır.", place: "Özel siparişle yapılır." },
+                        { name: "Mamzana", img: "https://i.lezzet.com.tr/images-xxlarge-recipe/mamzana-30b65672-0089-4b13-a4c3-1d49156557e0.jpg", desc: "Köz patlıcan ve biberli meze.", recipe: "Patlıcanlar közlenir, yoğurtlanır.", place: "Meyhaneler." },
+                        { name: "Zirva", img: "https://st.depositphotos.com/1003814/2573/i/950/depositphotos_25733923-stock-photo-mutancana.jpg", desc: "Osmanlı saray mutfağından etli meyveli yemek.", recipe: "Kuru meyveler ve etle pişer.", place: "Saray mutfağı restoranları." }
+                    ],
+                    yan: [
+                        { name: "Karaağaç Biberi", img: "https://www.edirne.bel.tr/upload/edirne-tava-cigeri-1.jpg", desc: "Ciğerin olmazsa olmazı kurutulmuş biber.", recipe: "Gölgede kurutulur, yağda kızartılır.", place: "Tüm ciğerciler." },
+                        { name: "Piyaz", img: "https://cdn.yemek.com/mnresize/1250/833/uploads/2021/01/fasulye-piyazi-tarifi.jpg", desc: "Bol soğanlı fasulye.", recipe: "Haşlanmış fasulye, soğan, sirke.", place: "Ciğerciler." },
+                        { name: "Acı Sos", img: "https://cdn.yemek.com/mnresize/940/940/uploads/2016/10/aci-sos-tarifi.jpg", desc: "Domatesli özel acı sos.", recipe: "Mevsim domatesleri ve biberleri.", place: "Köfteciler." }
+                    ],
+                    tatli: [
+                        { name: "Badem Ezmesi", img: "https://www.kehribar.com.tr/wp-content/uploads/2020/09/badem-ezmesi.jpg", desc: "Edirne'nin meşhur hediyeliği.", recipe: "Badem unu ve şeker şerbeti.", place: "Keçecizade." },
+                        { name: "Deva-i Misk", img: "https://www.kulturportali.gov.tr/repoKulturPortali/large/SehirRehberi//GezilecekYer/20170518153337976_Deva-i%20Misk%20Helvas%C4%B1%20Foto%C4%9Fraf%20Enver%20%C5%9EENG%C3%9CL.png?format=jpg&quality=50", desc: "41 baharatlı Osmanlı tatlısı.", recipe: "Yumurta akı, bal, baharatlar.", place: "Şekerlemeciler." },
+                        { name: "Kavala Kurabiyesi", img: "https://im.haberturk.com/2019/10/24/ver1571918341/2533814_810x458.jpg", desc: "Bademli un kurabiyesi.", recipe: "Kavrulmuş un ve badem.", place: "Pastaneler." }
+                    ],
+                    icecek: [
+                        { name: "Hardaliye", img: "https://iasbh.tmgrup.com.tr/817730/0/0/0/0/0/0?u=https://isbh.tmgrup.com.tr/sb/album/2019/10/22/hardaliye-nedir-faydalari-nelerdir-1571742491560.jpg", desc: "Üzüm kabuğu ve hardal tohumu içeceği.", recipe: "Fermente edilmeden yapılır.", place: "Şarküteriler." },
+                        { name: "Reyhan Şerbeti", img: "https://i.nefisyemektarifleri.com/2018/06/07/reyhan-serbeti.jpg", desc: "Mor reyhan ile yapılan ferahlatıcı içecek.", recipe: "Reyhan, limon tuzu, şeker.", place: "Kafe ve restoranlar." },
+                        { name: "Ayran", img: "https://cdn.yemek.com/mnresize/940/940/uploads/2020/08/bol-kopuklu-ayran-tarifi.jpg", desc: "Ciğerin yanına açık ayran.", recipe: "Yoğurt, su, tuz.", place: "Her yer." }
+                    ]
+                },
+                artifacts: [
+                    { name: "Selimiye Camii", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Selimiye_Mosque_Dome.jpg/1200px-Selimiye_Mosque_Dome.jpg", desc: "Mimar Sinan'ın başyapıtı.", locUrl: "http://maps.google.com/?q=Selimiye+Camii+Edirne", info: "1575 yılında ibadete açılmıştır. UNESCO Dünya Mirasıdır." },
+                    { name: "Meriç Köprüsü", img: "https://www.edirne.bel.tr/upload/meric-koprusu.jpg", desc: "Tarihi taş köprü.", locUrl: "http://maps.google.com/?q=Meric+Bridge", info: "Gün batımını izlemek için harika bir yerdir." },
+                    { name: "II. Bayezid Külliyesi", img: "https://kvmgm.ktb.gov.tr/Resim/25114,edirne-ii-bayezid-kulliyesi-saglik-muzesi.png?0", desc: "Sağlık Müzesi olarak kullanılır.", locUrl: "http://maps.google.com/?q=Saglik+Muzesi+Edirne", info: "Geçmişte müzikle akıl hastaları tedavi edilirdi." }
+                ]
+            },
+            'Tekirdağ': {
+                food: {
+                    corba: [
+                        { name: "Kelle Paça", img: "https://i.nefisyemektarifleri.com/2019/02/11/kelle-paca-corbasi-tarifi-1.jpg", desc: "Sarımsaklı şifa deposu.", recipe: "Kelle eti didiklenir, suyuyla pişer.", place: "Çorbacı İbrahim." },
+                        { name: "Mercimek Çorbası", img: "https://cdn.yemek.com/mnresize/940/940/uploads/2014/06/mercimek-corbasi-yemekcom.jpg", desc: "Süzme mercimek.", recipe: "Klasik usul.", place: "Tüm lokantalar." },
+                        { name: "İşkembe", img: "https://cdn.yemek.com/mnresize/1250/833/uploads/2022/01/lokanta-usulu-iskembe-corbasi-yemekcom.jpg", desc: "Gece çorbası.", recipe: "Terbiyeli işkembe.", place: "Gece çorbacıları." }
+                    ],
+                    ana: [
+                        { name: "Tekirdağ Köftesi", img: "https://im.haberturk.com/2020/10/16/ver1602844855/2837659_810x458.jpg", desc: "Elastik yapısıyla meşhur köfte.", recipe: "Üç aşamalı yoğrulur, dinlendirilir.", place: "Özcanlar, Köfteci İbrahim." },
+                        { name: "Satır Et", img: "https://i.lezzet.com.tr/images-xxlarge-recipe/satir_et-7d4380a0-0624-4e33-8f6a-969446f25091.jpg", desc: "Keşan bölgesinin meşhur eti.", recipe: "Etler satırla kıyma haline getirilir.", place: "Keşan bölgesi." },
+                        { name: "Kuzu Çevirme", img: "https://iasbh.tmgrup.com.tr/d80c35/0/0/0/0/0/0?u=https://isbh.tmgrup.com.tr/sb/album/2020/07/28/kuzu-cevirme-nasil-yapilir-evde-firinda-kuzu-cevirme-tarifi-1595932540562.jpg", desc: "Sırık kebabı.", recipe: "Ağır ateşte bütün kuzu.", place: "Yol üstü restoranlar." }
+                    ],
+                    ara: [
+                        { name: "Cizleme", img: "https://i.nefisyemektarifleri.com/2016/02/10/cizleme-akitma-tarifi-1.jpg", desc: "Trakya kribi/akıtması.", recipe: "Un, su, maya ile tavada.", place: "Kahvaltı mekanları." },
+                        { name: "Sini Mantısı", img: "https://i.lezzet.com.tr/images-xxlarge-recipe/sini_mantisi-b52e0081-302a-4a8b-980b-68480376d8c0.jpg", desc: "Fırınlanmış mantı.", recipe: "Tepsiye dizilir, fırınlanır.", place: "Mantı evleri." },
+                        { name: "Kaçamak", img: "https://i.nefisyemektarifleri.com/2018/11/27/kacamak-tarifi-gocmen-yemegi.jpg", desc: "Mısır unu ve pekmezli/peynirli yemek.", recipe: "Mısır unu bulamacı.", place: "Köy evleri." }
+                    ],
+                    yan: [
+                        { name: "Kırmızı Biber Sosu", img: "https://cdn.yemek.com/mnresize/940/940/uploads/2015/09/ajvar-sos-tarifi.jpg", desc: "Köftenin en iyi eşlikçisi.", recipe: "Kapya biber salçası.", place: "Köfteciler." },
+                        { name: "Yoğurt", img: "https://cdn.yemek.com/mnresize/940/940/uploads/2014/11/ev-yogurdu-yemekcom.jpg", desc: "Manda yoğurdu.", recipe: "Doğal mayalama.", place: "Saray ilçesi." },
+                        { name: "Piyaz", img: "https://cdn.yemek.com/mnresize/1250/833/uploads/2021/01/fasulye-piyazi-tarifi.jpg", desc: "Fasulye salatası.", recipe: "Standart piyaz.", place: "Köfteciler." }
+                    ],
+                    tatli: [
+                        { name: "Hayrabolu Tatlısı", img: "https://cdn.yemek.com/mnresize/1250/833/uploads/2021/06/peynir-tatlisi-tarifi.jpg", desc: "Tahinli peynir tatlısı.", recipe: "Tuzsuz peynir, irmik, şerbet.", place: "Hayrabolu ve Merkez." },
+                        { name: "Peynir Helvası", img: "https://i.lezzet.com.tr/images-xxlarge-recipe/peynir_helvasi-74b868f1-5582-4f7f-a639-650073014e71.jpg", desc: "Höşmerim benzeri nefis tatlı.", recipe: "Taze peynir ve şeker.", place: "Pastaneler." },
+                        { name: "Bulama", img: "https://www.trakyagezi.com/wp-content/uploads/2017/01/bulama-helvasi-01.jpg", desc: "Üzüm pekmezi helvası.", recipe: "Çöven otu suyu ve pekmez.", place: "Şark köyleri." }
+                    ],
+                    icecek: [
+                        { name: "Üzüm Şırası", img: "https://i.lezzet.com.tr/images-xxlarge-recipe/uzum-sirasi-42ce916a-d421-4d1a-9694-8f921f66089e.jpg", desc: "Taze sıkılmış üzüm suyu.", recipe: "Bağ bozumunda yapılır.", place: "Bağ evleri." },
+                        { name: "Ayran", img: "https://cdn.yemek.com/mnresize/940/940/uploads/2020/08/bol-kopuklu-ayran-tarifi.jpg", desc: "Köftenin yanına.", recipe: "--", place: "Her yer." },
+                        { name: "Çay", img: "https://i.nefisyemektarifleri.com/2023/01/18/demleme-cay-tarifi.jpg", desc: "Sahilde ince belli.", recipe: "--", place: "Sahil çay bahçeleri." }
+                    ]
+                },
+                artifacts: [
+                    { name: "Rakoczi Müzesi", img: "https://upload.wikimedia.org/wikipedia/commons/2/29/Rakoczi_Museum_Tekirdag_2017.jpg", desc: "Macar Prens'in evi.", locUrl: "http://maps.google.com/?q=Rakoczi+Muzesi", info: "Barbaros caddesi üzerindedir." },
+                    { name: "Rüstem Paşa Camii", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/R%C3%BCstem_Pa%C5%9Fa_Mosque_Tekirda%C4%9F_5483.jpg/1200px-R%C3%BCstem_Pa%C5%9Fa_Mosque_Tekirda%C4%9F_5483.jpg", desc: "Mimar Sinan eseri.", locUrl: "http://maps.google.com/?q=Rustem+Pasa+Camii+Tekirdag", info: "Şehrin merkezindedir." },
+                    { name: "Namık Kemal Evi", img: "https://www.tekirdag.bel.tr/content/upload/images/namikkemalevi.jpg", desc: "Vatan şairinin doğduğu ev.", locUrl: "http://maps.google.com/?q=Namik+Kemal+Evi", info: "Müze olarak gezilebilir." }
+                ]
+            },
+            'Kırklareli': {
+                food: {
+                     corba: [
+                        { name: "Oğmaç Çorbası", img: "https://www.kulturportali.gov.tr/repoKulturPortali/large/02012013110906234_KIRKLAREL%C4%B0%20B%C4%B0LG%C4%B0%20(52).JPG?format=jpg&quality=50", desc: "Hamur kırıntılı çorba.", recipe: "Un, yumurta, süt.", place: "Ev yemekleri lokantaları." },
+                        { name: "Sütlü Çorba", img: "https://i.nefisyemektarifleri.com/2016/01/29/sutlu-corba-tarifi-1.jpg", desc: "Bölgeye has sütlü çorba.", recipe: "Süt ve şehriye.", place: "Köyler." },
+                        { name: "Tarhana", img: "https://i.lezzet.com.tr/images-xxlarge-recipe/trakya-usulu-kymal-tarhana-corbasi-b69527f0-459f-43b9-a417-063852077e62.jpg", desc: "Trakya usulü tarhana.", recipe: "Kışlık hazırlanan tarhana.", place: "Evler." }
+                    ],
+                    ana: [
+                        { name: "Kırklareli Köftesi", img: "https://www.kulturportali.gov.tr/repoKulturPortali/large/SehirRehberi//GezilecekYer/20161226162232537_Kofte%20Ahmet%20IMG_3042.jpg?format=jpg&quality=50", desc: "Bölgeye has kasap köfte.", recipe: "Dana eti ve baharat.", place: "Köfteci Ahmet." },
+                        { name: "Oğlak Kebabı", img: "https://im.haberturk.com/2019/09/27/ver1569576483/2525946_810x458.jpg", desc: "Mevsiminde (Bahar) yapılır.", recipe: "Fırında ağır ateş.", place: "Yol üstü restoranlar." },
+                        { name: "Papaz Yahnisi", img: "https://i.lezzet.com.tr/images-xxlarge-recipe/papaz_yahnisi-d64e9086-63d7-463d-8f9f-537463f274a4.jpg", desc: "Soğanlı et yemeği.", recipe: "Bol arpacık soğan ve et.", place: "Özel restoranlar." }
+                    ],
+                    ara: [
+                        { name: "Labada Borani", img: "https://i.lezzet.com.tr/images-xxlarge-recipe/labada-boranisi-339270e5-1a85-4841-8f43-8557993a408c.jpg", desc: "Yoğurtlu ot yemeği.", recipe: "Labada otu ve yoğurt.", place: "Ev mutfağı." },
+                        { name: "Kaşar Pane", img: "https://i.nefisyemektarifleri.com/2014/10/kasar-pane-kizartmasi.jpg", desc: "Trakya kaşarı kızartması.", recipe: "Galeta unu ve kaşar.", place: "Kahvaltı salonları." },
+                        { name: "Manca", img: "https://i.lezzet.com.tr/images-xxlarge-recipe/manca-7639f750-2d8c-4f13-bb74-2c5e538053c5.jpg", desc: "Patlıcanlı biberli salata.", recipe: "Köz sebzeler.", place: "Meyhaneler." }
+                    ],
+                    yan: [
+                        { name: "Trakya Eski Kaşarı", img: "https://www.peynirler.com/wp-content/uploads/2020/04/eski-kasar-peyniri.jpg", desc: "Olgunlaştırılmış peynir.", recipe: "--", place: "Mandıralar." },
+                        { name: "Turşu", img: "https://i.nefisyemektarifleri.com/2021/09/29/karisik-tursu-nasil-yapilir.jpg", desc: "Kırklareli turşusu.", recipe: "--", place: "Turşucular." },
+                        { name: "Yoğurt", img: "https://cdn.yemek.com/mnresize/940/940/uploads/2014/11/ev-yogurdu-yemekcom.jpg", desc: "Koyun yoğurdu.", recipe: "--", place: "Köyler." }
+                    ],
+                    tatli: [
+                        { name: "Höşmerim", img: "https://i.nefisyemektarifleri.com/2019/04/05/orjinal-hosmerim-tatlisi-balikesir-yoresi.jpg", desc: "Peynir tatlısı.", recipe: "Taze peynir, un, şeker.", place: "Pastaneler." },
+                        { name: "Pekmezli Kaçamak", img: "https://www.trakyagezi.com/wp-content/uploads/2010/01/kacamak-01.jpg", desc: "Tatlı versiyonu.", recipe: "Üzerine pekmez dökülür.", place: "Köy evleri." },
+                        { name: "Sütlaç", img: "https://cdn.yemek.com/mnresize/1250/833/uploads/2020/12/firin-sutlac-tarifi.jpg", desc: "Fırın sütlaç.", recipe: "Köy sütüyle.", place: "Lokantalar." }
+                    ],
+                    icecek: [
+                        { name: "Hardaliye", img: "https://iasbh.tmgrup.com.tr/817730/0/0/0/0/0/0?u=https://isbh.tmgrup.com.tr/sb/album/2019/10/22/hardaliye-nedir-faydalari-nelerdir-1571742491560.jpg", desc: "Kırklareli patentli içecek.", recipe: "Siyah üzüm ve hardal tohumu.", place: "Hardaliye üreticileri." },
+                        { name: "Boza", img: "https://i.lezzet.com.tr/images-xxlarge-recipe/boza-b6a9416e-1d54-4161-9f93-9c2f60290947.jpg", desc: "Kış içeceği.", recipe: "Darı irmiği.", place: "Boza dükkanları." },
+                        { name: "Meşe Balı Şerbeti", img: "https://i20.haber7.net/resize/1300x731//haber/haber7/photos/2017/46/mese_bali_bagisiklik_sistemini_guclendiriyor_1510650965_4483.jpg", desc: "Bölge balıyla şerbet.", recipe: "Su ve bal.", place: "Köyler." }
+                    ]
+                },
+                artifacts: [
+                    { name: "Dupnisa Mağarası", img: "https://kvmgm.ktb.gov.tr/Resim/25134,kirklareli-dupnisa-magarasi.png?0", desc: "Yarasalı mağara.", locUrl: "http://maps.google.com/?q=Dupnisa+Magarasi", info: "Demirköy ilçesindedir." },
+                    { name: "İğneada Longoz", img: "https://www.kulturportali.gov.tr/repoKulturPortali/large/SehirRehberi//GezilecekYer/20161223164132864_Longoz%20Ormanlar%C4%B1%20(1).JPG?format=jpg&quality=50", desc: "Su basar ormanları.", locUrl: "http://maps.google.com/?q=Igneada+Longoz", info: "Dünyada nadir görülen ekosistem." },
+                    { name: "Aya Nikola Manastırı", img: "https://www.trakyagezi.com/wp-content/uploads/2016/09/aya-nikola-manastiri-kiyikoy-01.jpg", desc: "Kayaya oyma manastır.", locUrl: "http://maps.google.com/?q=Aya+Nikola+Manastiri", info: "Kıyıköy beldesindedir." }
+                ]
+            }
+        };
+
+        // --- MANTIK ---
+        let currentMode = ""; // 'food' veya 'artifact'
+
+        // Mod Seçimi
+        function selectMode(mode) {
+            currentMode = mode;
+            $('#landing-page').fadeOut(300, function() {
+                $('#city-page').css('display', 'flex').hide().fadeIn(300);
+            });
+        }
+
+        // Şehir Seçimi ve İçerik Yükleme
+        function loadContent(city) {
+            $('.city-title').text(city);
+            const cityData = database[city];
+
+            if (currentMode === 'food') {
+                renderFood(cityData.food);
+                $('#city-page').fadeOut(300, function() {
+                    $('#food-section').fadeIn(300);
+                    window.scrollTo(0,0);
+                });
+            } else {
+                renderArtifacts(cityData.artifacts);
+                $('#city-page').fadeOut(300, function() {
+                    $('#artifact-section').fadeIn(300);
+                    window.scrollTo(0,0);
+                });
+            }
+        }
+
+        // Yemekleri Ekrana Basma Fonksiyonu
+        function renderFood(foodData) {
+            // Kategorileri eşleştir
+            const cats = {
+                'corba': '#cat-corba',
+                'ana': '#cat-ana',
+                'ara': '#cat-ara',
+                'yan': '#cat-yan',
+                'tatli': '#cat-tatli',
+                'icecek': '#cat-icecek'
+            };
+            
+            const titles = {
+                'corba': '🥣 Çorbalar',
+                'ana': '🍖 Ana Yemekler',
+                'ara': '🥟 Ara Sıcaklar',
+                'yan': '🥗 Yancılar',
+                'tatli': '🍮 Tatlılar',
+                'icecek': '🥤 İçecekler'
+            };
+
+            // Her kategoriyi temizle ve doldur
+            for (let key in cats) {
+                const container = $(cats[key]);
+                container.empty();
+                
+                // Başlık ekle
+                container.append(`<h3 class="category-title">${titles[key]}</h3>`);
+
+                // Kartları ekle
+                if (foodData[key]) {
+                    foodData[key].forEach((item, index) => {
+                        const uniqueId = key + index; // Benzersiz ID oluştur
+                        const html = `
+                            <div class="card item-card">
+                                <div class="row g-0">
+                                    <div class="col-md-4 card-img-wrapper">
+                                        <img src="${item.img}" class="card-img-fit" alt="${item.name}">
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="card-body">
+                                            <h4 class="card-title text-primary">${item.name}</h4>
+                                            <p class="text-muted">${item.desc}</p>
+                                            
+                                            <button class="btn btn-outline-primary w-100" type="button" data-bs-toggle="collapse" data-bs-target="#${uniqueId}">
+                                                Detayları Gör <i class="bi bi-chevron-down"></i>
+                                            </button>
+
+                                            <div class="collapse" id="${uniqueId}">
+                                                <div class="mt-3">
+                                                    <div class="info-box">
+                                                        <span class="info-title"><i class="bi bi-book"></i> Tarif / İçerik:</span>
+                                                        <p class="m-0">${item.recipe}</p>
+                                                    </div>
+                                                    <div class="info-box">
+                                                        <span class="info-title"><i class="bi bi-geo-alt-fill"></i> Nerede Yenir / Bulunur:</span>
+                                                        <p class="m-0">${item.place}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        container.append(html);
+                    });
+                }
+            }
+        }
+
+        // Eserleri Ekrana Basma Fonksiyonu
+        function renderArtifacts(artifactList) {
+            const container = $('#artifact-container');
+            container.empty();
+
+            if(artifactList) {
+                artifactList.forEach((item, index) => {
+                    const uniqueId = 'art' + index;
+                    const html = `
+                        <div class="card item-card">
+                            <div class="row g-0">
+                                <div class="col-md-4 card-img-wrapper">
+                                    <img src="${item.img}" class="card-img-fit" alt="${item.name}">
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="card-body">
+                                        <h4 class="card-title text-primary">${item.name}</h4>
+                                        <p class="text-muted">${item.desc}</p>
+                                        
+                                        <button class="btn btn-outline-primary w-100" type="button" data-bs-toggle="collapse" data-bs-target="#${uniqueId}">
+                                            Detaylı Bilgi <i class="bi bi-chevron-down"></i>
+                                        </button>
+
+                                        <div class="collapse" id="${uniqueId}">
+                                            <div class="mt-3">
+                                                <div class="info-box">
+                                                    <span class="info-title"><i class="bi bi-info-circle"></i> Tarihçe / Bilgi:</span>
+                                                    <p class="m-0">${item.info}</p>
+                                                </div>
+                                                <a href="${item.locUrl}" target="_blank" class="btn btn-primary w-100 mt-2">
+                                                    <i class="bi bi-map-fill"></i> Haritada Konumu Aç
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.append(html);
+                });
+            }
+        }
+
+        // --- NAVİGASYON SCROLL ---
+        document.querySelectorAll('.nav-link').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                // Link davranışı (href) çalışsın ama smooth scroll ile
+                e.preventDefault();
+                document.querySelectorAll('.nav-link').forEach(a => a.classList.remove('active'));
+                this.classList.add('active');
+
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                const offset = 140; 
+                const elementPosition = targetElement.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: "smooth"
+                });
+            });
+        });
+
+    </script>
+</body>
+</html>
